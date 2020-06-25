@@ -1,0 +1,11 @@
+body {
+    overflow: hidden;
+}
+
+.delete-button:hover {
+    background-color: #E74C3C !important;
+}
+
+.toggle-button:hover {
+    background-color: #F39C12 !important;
+}
