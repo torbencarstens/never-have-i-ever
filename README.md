@@ -1,3 +1,3 @@
 # never-have-i-ever
 
-More or less a OpenAlcoholics/Saufautomat clone.
+More or less an OpenAlcoholics/Saufautomat clone.
