@@ -460,15 +460,7 @@ let view (model: Model) dispatch =
                 if model.InitialLoad then dispatch InitialLoad)
           ClassName "container-fluid h-100" ]
         [ div [ ClassName "row m-4" ]
-              [ figure []
-                    [ audio
-                        [ Id "nextcard-audio"
-                          Src "/nextcard.mp3" ] [] ]
-                figure []
-                    [ audio
-                        [ Id "nextround-audio"
-                          Src "/nextround.mp3" ] [] ]
-                div [ ClassName "col-1" ]
+              [ div [ ClassName "col-1" ]
                     [ button
                         [ ClassName "btn btn-primary m-1"
                           DataToggle "modal"
@@ -476,13 +468,13 @@ let view (model: Model) dispatch =
                       button
                           [ ClassName "btn btn-primary ml-1"
                             OnClick(fun _ -> dispatch Reset) ] [ str "Reset" ] ]
-                (displayInformationHeader model dispatch)
+//                (displayInformationHeader model dispatch)
                 span [ ClassName "text-secondary" ] [ str "Contact: saufautomat@carstens.tech" ] ]
           div
               [ ClassName "row m-2"
                 Style [ Height "65%" ] ]
               [ (displayCurrentCard model dispatch)
-                (sidebar model dispatch) ]
+                (*(sidebar model dispatch)*) ]
           (settings model dispatch) ]
 
 // App
