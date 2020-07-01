@@ -5,17 +5,14 @@ module App
  You can find more info about Elmish architecture and samples at https://elmish.github.io/
 *)
 
+open Browser.Navigator
 open Card
 open Elmish
 open Elmish.React
-open Browser
 open Fable.Core
 open Fable.React
 open Fable.React.Props
-open Player
 open Thoth.Fetch
-open Thoth.Json
-open System
 open System.Text.RegularExpressions
 
 // MODEL
@@ -25,8 +22,7 @@ type RoundInformation =
       InitialPlayerIndex: int }
 
 type Model =
-    { ActiveCards: (Card.Type * Player.Type option) list
-      CurrentCard: Card.Type option
+    { CurrentCard: Card.Type option
       Cards: Card.Type list
       InitialLoad: bool }
 
@@ -37,9 +33,21 @@ type Msg =
     | Reset
     | AdvanceTurn
 
+let unwrapOr (opt: 'b option) (def: 'b): 'b =
+    match opt with
+    | Some value -> value
+    | None -> def
+
+let userLanguage =
+    let lang = unwrapOr (navigator.language) "en_US"
+    match Seq.head (lang.Split '_') with
+    | "en" -> "en"
+    | "de" -> "de"
+    | _ -> "en"
+
 let getCards dispatch =
     promise {
-        let url = "https://raw.githubusercontent.com/torbencarstens/never-have-i-ever-cards/master/tasks.json"
+        let url = sprintf "https://raw.githubusercontent.com/torbencarstens/never-have-i-ever-cards/develop/tasks_%s.json" userLanguage
         let! res = Fetch.get (url)
         AddCards res |> dispatch
     }
@@ -67,18 +75,12 @@ type HtmlAttr =
     interface IHTMLProp
 
 let init (): Model * Cmd<Msg> =
-      { ActiveCards = List.empty
-        CurrentCard = None
+      { CurrentCard = None
         Cards = List.empty
         InitialLoad = true }, Cmd.Empty
 
 let unwrapMapOrDefault (opt: 'b option) (m: 'b -> 't) (def: 't) =
     if opt.IsSome then m opt.Value else def
-
-let unwrapOr (opt: 'b option) (def: 'b): 'b =
-    match opt with
-    | Some value -> value
-    | None -> def
 
 // UPDATE
 
@@ -88,7 +90,7 @@ let filterCardsForTurn cards model =
     let distinctCount = (Card.getDistinctCount cards)
 
     List.filter (fun card ->
-        card.Count > 0 && if distinctCount > 1 // TODO: this should be checked after everything else
+        if distinctCount > 1 // TODO: this should be checked after everything else
                        then card.Id <> (unwrapMapOrDefault model.CurrentCard (fun c -> c.Id) -1)
                        else true) cards
 
@@ -100,16 +102,6 @@ let getNextCard cards model =
         let card = cards.Item(System.Random().Next() % cards.Length)
 
         Some card
-
-let explodeCards cards =
-    (List.map (fun card -> ([ card ] |> Seq.collect (fun c -> List.replicate c.Count { c with Count = 1 }))) cards)
-    |> Seq.reduce Seq.append
-    |> List.ofSeq
-
-let getPlayerByIndex index (players: Player.Type list): Player.Type option =
-    try
-        Some(players.Item index)
-    with _ -> None
 
 let update (msg: Msg) (model: Model) =
     match msg with
@@ -125,11 +117,11 @@ let update (msg: Msg) (model: Model) =
         let model =
             { model with
                   CurrentCard = card
-                  Cards = Card.decreaseCount card model.Cards }
+                  Cards = List.filter (fun c -> card.IsNone || card.Value <> c) model.Cards }
 
         model, Cmd.Empty
     | AddCards cards ->
-        { model with Cards = explodeCards (List.map Card.Into cards) }, Cmd.Empty
+        { model with Cards = List.map Card.Into cards }, Cmd.Empty
     | Reset -> init ()
 
 // VIEW (rendered with React)
