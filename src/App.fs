@@ -39,8 +39,8 @@ let unwrapOr (opt: 'b option) (def: 'b): 'b =
     | None -> def
 
 let userLanguage =
-    let lang = unwrapOr (navigator.language) "en_US"
-    match Seq.head (lang.Split '_') with
+    let lang = unwrapOr (navigator.language) "en-US"
+    match Seq.head (lang.Split '-') with
     | "en" -> "en"
     | "de" -> "de"
     | _ -> "en"
