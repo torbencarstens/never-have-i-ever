@@ -13,7 +13,8 @@ open Fable.Core
 open Fable.React
 open Fable.React.Props
 open Thoth.Fetch
-open System.Text.RegularExpressions
+open System.Text
+open App.Text
 
 // MODEL
 
@@ -24,7 +25,8 @@ type RoundInformation =
 type Model =
     { CurrentCard: Card.Type option
       Cards: Card.Type list
-      InitialLoad: bool }
+      InitialLoad: bool
+      Language: string }
 
 type Msg =
     | InitialLoad
@@ -32,22 +34,11 @@ type Msg =
     | AddCards of Card.RawType list
     | Reset
     | AdvanceTurn
+    | CycleLanguage of string
 
-let unwrapOr (opt: 'b option) (def: 'b): 'b =
-    match opt with
-    | Some value -> value
-    | None -> def
-
-let userLanguage =
-    let lang = unwrapOr (navigator.language) "en-US"
-    match Seq.head (lang.Split '-') with
-    | "en" -> "en"
-    | "de" -> "de"
-    | _ -> "en"
-
-let getCards dispatch =
+let getCards language dispatch =
     promise {
-        let url = sprintf "https://raw.githubusercontent.com/torbencarstens/never-have-i-ever-cards/develop/tasks_%s.json" userLanguage
+        let url = sprintf "https://raw.githubusercontent.com/torbencarstens/never-have-i-ever-cards/develop/tasks_%s.json" language
         let! res = Fetch.get (url)
         AddCards res |> dispatch
     }
@@ -62,29 +53,16 @@ let stop id =
     ((Browser.Dom.window.document.getElementById id) :?> Browser.Types.HTMLMediaElement).pause()
     assignCurrentTime ((Browser.Dom.window.document.getElementById id) :?> Browser.Types.HTMLMediaElement) "0.0"
 
-
-type HtmlAttr =
-    | [<CompiledName("aria-valuenow")>] AriaValueNow of string
-    | [<CompiledName("aria-valuemin")>] AriaValueMin of string
-    | [<CompiledName("aria-valuemax")>] AriaValueMax of string
-    | [<CompiledName("data-toggle")>] DataToggle of string
-    | [<CompiledName("data-target")>] DataTarget of string
-    | [<CompiledName("data-dismiss")>] DataDismiss of string
-    | [<CompiledName("type")>] InputType of string
-    | [<CompiledName("for")>] For of string
-    interface IHTMLProp
-
 let init (): Model * Cmd<Msg> =
       { CurrentCard = None
         Cards = List.empty
-        InitialLoad = true }, Cmd.Empty
+        InitialLoad = true
+        Language = userLanguage }, Cmd.Empty
 
 let unwrapMapOrDefault (opt: 'b option) (m: 'b -> 't) (def: 't) =
     if opt.IsSome then m opt.Value else def
 
 // UPDATE
-
-let int_replacement_regex = new Regex("{int(:?:(\d+)-(\d+))?}")
 
 let filterCardsForTurn cards model =
     let distinctCount = (Card.getDistinctCount cards)
@@ -106,7 +84,7 @@ let getNextCard cards model =
 let update (msg: Msg) (model: Model) =
     match msg with
     | InitialLoad ->
-        { model with InitialLoad = false }, Cmd.ofSub (fun dispatch -> getCards dispatch |> Promise.start)
+        { model with InitialLoad = false }, Cmd.ofSub (fun dispatch -> getCards model.Language dispatch |> Promise.start)
     | AdvanceTurn ->
         model,
         Cmd.ofSub (fun dispatch ->
@@ -123,6 +101,11 @@ let update (msg: Msg) (model: Model) =
     | AddCards cards ->
         { model with Cards = List.map Card.Into cards }, Cmd.Empty
     | Reset -> init ()
+    | CycleLanguage language ->
+        let language = match language with
+                        | "en" -> "de"
+                        | _ -> "en"
+        { model with Language = language }, Cmd.ofSub (fun dispatch -> getCards language dispatch |> Promise.start)
 
 // VIEW (rendered with React)
 
@@ -140,7 +123,9 @@ let displayCurrentCard model dispatch =
                           [ str
                               (match model.CurrentCard with
                                | Some (card) -> card.Text
-                               | None -> "Click to start") ] ] ] ]
+                               | None -> (getKey model.Language "CLICK_TO_START")) ] ]
+                button [ ClassName "btn btn-secondary"
+                         OnClick (fun _ -> CycleLanguage model.Language |> dispatch) ] [ str model.Language ] ] ]
 
 let view (model: Model) dispatch =
     div
@@ -156,4 +141,5 @@ let view (model: Model) dispatch =
 // App
 Program.mkProgram init update view
 |> Program.withReactSynchronous "elmish-app"
+|> Program.withConsoleTrace
 |> Program.run
