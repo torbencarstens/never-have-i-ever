@@ -18,7 +18,7 @@ jobs:
         id: write_kubeconfig
         uses: timheuer/base64-to-file@v1
         with:
-          fileName: '$GITHUB_WORKSPACE/.kubeconfig'
+          fileName: $GITHUB_WORKSPACE/.kubeconfig
           encodedString: ${{ secrets.K8SCONF }}
       - run: cat $GITHUB_WORKSPACE/.kubeconfig | md5sum
       - run: cat $GITHUB_WORKSPACE/.kubeconfig | wc -l
