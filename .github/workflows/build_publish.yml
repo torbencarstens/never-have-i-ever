@@ -18,10 +18,10 @@ jobs:
         id: write_kubeconfig
         uses: timheuer/base64-to-file@v1
         with:
-          fileName: $GITHUB_WORKSPACE/.kubeconfig
+          fileName: kubeconfig
           encodedString: ${{ secrets.K8SCONF }}
-      - run: cat $GITHUB_WORKSPACE/.kubeconfig | md5sum
-      - run: cat $GITHUB_WORKSPACE/.kubeconfig | wc -l
+      - run: cat kubeconfig | md5sum
+      - run: cat kubeconfig | wc -l
       - run: sed -i -e "s#{{TAG}}#$(echo ${GITHUB_SHA})#g" src/App.fs
       - run: npm install
       - run: npm run prod
