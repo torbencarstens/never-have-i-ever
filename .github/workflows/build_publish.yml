@@ -15,7 +15,7 @@ jobs:
         with:
           dotnet-version: "3.1.x"
       - name: get kube config
-        run: 'echo $K8SCONF > $GITHUB_WORKSPACE/.kubeconfig'
+        run: 'echo $K8SCONF | base64 -d > $GITHUB_WORKSPACE/.kubeconfig'
         env:
           K8SCONF: ${{ secrets.K8SCONF }}
       - run: cat $GITHUB_WORKSPACE/.kubeconfig | md5sum
@@ -56,7 +56,7 @@ jobs:
         id: vars
         run: echo ::set-output name=tag::$(echo ${GITHUB_SHA})
       - name: get kube config
-        run: 'echo $K8SCONF > $GITHUB_WORKSPACE/.kubeconfig'
+        run: 'echo $K8SCONF | base64 -d > $GITHUB_WORKSPACE/.kubeconfig'
         env:
           K8SCONF: ${{ secrets.K8SCONF }}
       - name: update tag in manifest.yml
