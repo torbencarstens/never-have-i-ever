@@ -14,14 +14,6 @@ jobs:
       - uses: actions/setup-dotnet@v1
         with:
           dotnet-version: "3.1.x"
-      - name: Run Workflow
-        id: write_kubeconfig
-        uses: timheuer/base64-to-file@v1
-        with:
-          fileName: kubeconfig
-          encodedString: ${{ secrets.K8SCONF }}
-      - run: cat kubeconfig | md5sum
-      - run: cat kubeconfig | wc -l
       - run: sed -i -e "s#{{TAG}}#$(echo ${GITHUB_SHA})#g" src/App.fs
       - run: npm install
       - run: npm run prod
@@ -57,12 +49,11 @@ jobs:
       - name: Get the version
         id: vars
         run: echo ::set-output name=tag::$(echo ${GITHUB_SHA})
-      - name: get kube config
-        run: 'echo $K8SCONF | base64 -d > $GITHUB_WORKSPACE/.kubeconfig'
-        env:
-          K8SCONF: ${{ secrets.K8SCONF }}
       - name: update tag in manifest.yml
         run: sed -i -e "s#{{TAG}}#:$(echo ${{steps.vars.outputs.tag}})#g" .kubernetes/manifest.yaml
-      - name: apply config
-        run: kubectl --kubeconfig=$GITHUB_WORKSPACE/.kubeconfig apply -f .kubernetes/manifest.yaml
+      - uses: danielr1996/kubectl-action@1.0.0
+        name: apply config
+        with:
+          kubeconfig: ${{ secrets.K8SCONF }}
+          args: apply -f .kubernetes/manifest.yaml
 
