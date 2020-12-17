@@ -50,11 +50,11 @@ jobs:
         id: vars
         run: echo ::set-output name=tag::$(echo ${GITHUB_SHA})
       - name: get kube config
-        run: 'echo "$K8SCONF" > $GITHUB_WORKSPACE/.kubeconfig'
-        shell: bash
+        run: 'echo $K8SCONF > $GITHUB_WORKSPACE/.kubeconfig'
         env:
           K8SCONF: ${{ secrets.K8SCONF }}
       - name: update tag in manifest.yml
         run: sed -i -e "s#{{TAG}}#:$(echo ${{steps.vars.outputs.tag}})#g" .kubernetes/manifest.yaml
       - name: apply config
-        run: kubectl -n neverhaveiever --kubeconfig=$GITHUB_WORKSPACE/.kubeconfig apply -f .kubernetes/manifest.yaml
+        run: kubectl --kubeconfig=$GITHUB_WORKSPACE/.kubeconfig apply -f .kubernetes/manifest.yaml
+
