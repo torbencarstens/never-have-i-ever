@@ -3,6 +3,23 @@ kind: Namespace
 metadata:
   name: nhie
 ---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: nhie-ingress
+  namespace: saufautomat
+  annotations:
+    kubernetes.io/ingress.class: kong
+spec:
+  rules:
+    - host: nhie.saufautom.at
+      http:
+        paths:
+          - path: /
+            backend:
+              serviceName: nhie-backend-service
+              servicePort: 60000
+---
 apiVersion: v1
 kind: Service
 metadata:
