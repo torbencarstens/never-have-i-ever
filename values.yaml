@@ -1,0 +1,35 @@
+namespace: torbencarstens
+
+deployment:
+  name: neverhaveiever
+  image: ghcr.io/torbencarstens/neverhaveiever:__TAG__
+  imagePullPolicy: Always
+  revisionHistoryLimit: 1
+  replicas: 2
+  ports:
+  - 8080
+  labels:
+    app: neverhaveiever
+  requests:
+    cpu: 50m
+    memory: 10Mi
+  limit:
+    cpu: 300m
+    memory: 50Mi
+
+configmap:
+  nginx:
+    name: nginx-config
+
+service:
+  name: neverhaveiever
+  port: 80
+  targetPort: 80
+  appSelector: neverhaveiever
+
+ingress:
+  hosts:
+    - saufautom.at
+  secret: tls-neverhaveiever
+  issuer: letsencrypt-issuer-http
+  name: neverhaveiever

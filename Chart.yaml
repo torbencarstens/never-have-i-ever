@@ -1,0 +1,7 @@
+apiVersion: v2
+name: never have i ever
+description: Support alcoholism but different
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+icon: https://carstens.tech/helm_icon
