@@ -29,7 +29,7 @@ service:
 
 ingress:
   hosts:
-    - saufautom.at
+    - nhie.saufautom.at
   secret: tls-neverhaveiever
   issuer: letsencrypt-issuer-http
   name: neverhaveiever
